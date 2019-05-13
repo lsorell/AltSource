@@ -1,0 +1,7 @@
+C:\Users\Lane\source\repos\BankingLedger_AltSource\BankingLedger_AltSource\bin\Debug\BankingLedger_AltSource.exe.config
+C:\Users\Lane\source\repos\BankingLedger_AltSource\BankingLedger_AltSource\bin\Debug\BankingLedger_AltSource.exe
+C:\Users\Lane\source\repos\BankingLedger_AltSource\BankingLedger_AltSource\bin\Debug\BankingLedger_AltSource.pdb
+C:\Users\Lane\source\repos\BankingLedger_AltSource\BankingLedger_AltSource\obj\Debug\BankingLedger_AltSource.csprojAssemblyReference.cache
+C:\Users\Lane\source\repos\BankingLedger_AltSource\BankingLedger_AltSource\obj\Debug\BankingLedger_AltSource.csproj.CoreCompileInputs.cache
+C:\Users\Lane\source\repos\BankingLedger_AltSource\BankingLedger_AltSource\obj\Debug\BankingLedger_AltSource.exe
+C:\Users\Lane\source\repos\BankingLedger_AltSource\BankingLedger_AltSource\obj\Debug\BankingLedger_AltSource.pdb

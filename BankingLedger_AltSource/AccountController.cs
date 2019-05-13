@@ -13,17 +13,9 @@ namespace BankingLedger_AltSource
     public class AccountController
     {
         /// <summary>
-        /// The view that the controller can access.
-        /// </summary>
-        private IView _view;
-        /// <summary>
         /// A list containing all the accounts in the system.
         /// </summary>
         private IList<IAccount> _accounts;
-        /// <summary>
-        /// The account that is currently logged in.
-        /// </summary>
-        private IAccount _activeAccount;
 
         /// <summary>
         /// The number of times the salt and password will be run through the hashing algorithm.
@@ -35,9 +27,8 @@ namespace BankingLedger_AltSource
         /// </summary>
         /// <param name="view">The view for the controller to call.</param>
         /// <param name="accounts">A list of the accounts in the system.</param>
-        AccountController(IView view, IList<IAccount> accounts)
-        {
-            _view = view;
+        public AccountController(IList<IAccount> accounts)
+        {            
             _accounts = accounts;
         }
 
@@ -47,18 +38,20 @@ namespace BankingLedger_AltSource
         /// </summary>
         /// <param name="username">The username to create the account with.</param>
         /// <param name="password">The password to create the account with.</param>
-        public void CreateNewAccount(string username, string password)
+        /// <returns>Whether or not the given username already exists.</returns>
+        public bool CreateNewAccount(string username, string password)
         {
             foreach(IAccount a in _accounts)
             {
                 if(a.Username == username)
                 {
-                    throw new ArgumentException("Another account already exist with the same username.");
+                    return false;
                 }
             }            
             password = HashPassword(password);
             IAccount acc = new Account(username, password, 0, new List<string>());
-            _accounts.Add(acc);    
+            _accounts.Add(acc);
+            return true;
         }
 
         /// <summary>
@@ -69,20 +62,86 @@ namespace BankingLedger_AltSource
         /// <returns>Whether the username and password match the account.</returns>
         public bool Login(string username, string pass)
         {
-            IAccount acc = null; 
-            foreach(IAccount a in _accounts)
+            return ComparePasswordHash(pass, _accounts[FindAccountIndex(username)]);
+        }
+
+        /// <summary>
+        /// Checks the balance of the account with the given username.
+        /// </summary>
+        /// <param name="username">The username of the account to be checked.</param>
+        /// <returns>The balance of the account.</returns>
+        public decimal CheckBalance(string username)
+        {
+            return _accounts[FindAccountIndex(username)].Balance;            
+        }
+
+        /// <summary>
+        /// Deposits the given amount into the account with the given username.
+        /// </summary>
+        /// <param name="username">The username of the account to be deposited.</param>
+        /// <param name="amount">The deposit amount.</param>
+        /// <returns>The balance of the account after deposit.</returns>
+        public decimal Deposit(string username, decimal amount)
+        {
+            int i = FindAccountIndex(username);
+            _accounts[i].Balance += amount;
+            decimal bal = _accounts[i].Balance;            
+            _accounts[i].History.Add(String.Format("{0} - Deposit of {1:C2}; New balance: {2:C2}",DateTime.Now.ToString("dddd, dd MMMM yyyy HH:mm:ss").ToString(), amount, bal));
+            return bal;
+        }
+
+        /// <summary>
+        /// Withdrawals the given amount from the account with the given username if there are enough funds.
+        /// </summary>
+        /// <param name="username">The username of the account to be withdrawn from.</param>
+        /// <param name="amount">The amount to withdraw.</param>
+        /// <returns>The balance of the account after withdrawal.</returns>
+        public decimal Withdrawal(string username, decimal amount)
+        {
+            int i = FindAccountIndex(username);            
+            if(!(_accounts[i].Balance - amount >= 0))
             {
-                if(a.Username == username)
+                throw new Exception("There are not enough funds to withdraw that amount.");
+            }
+            _accounts[i].Balance -= amount;
+            decimal bal = _accounts[i].Balance;
+            _accounts[i].History.Add(String.Format("{0} - Withdrawal of {1:C2}; New balance: {2:C2}", DateTime.Now.ToString("dddd, dd MMMM yyyy HH:mm:ss").ToString(), amount, bal));
+            return bal;
+        }
+
+        /// <summary>
+        /// Gets the history of the account with the given username.
+        /// </summary>
+        /// <param name="username">The username of the account.</param>
+        /// <returns>The list of strings of transaction history.</returns>
+        public IList<string> History(string username)
+        {
+            return _accounts[FindAccountIndex(username)].History;
+        }
+
+        /// <summary>
+        /// Finds the index of the account that has the given username from the active account list.
+        /// </summary>
+        /// <param name="username">The username of the account.</param>
+        /// <returns>The index of the account with the given username.</returns>
+        private int FindAccountIndex(string username)
+        {
+            int i = 0;
+            IAccount acc = null;
+            foreach (IAccount a in _accounts)
+            {
+                if (a.Username == username)
                 {
                     acc = a;
                     break;
                 }
+                i++;
             }
-            if(acc == null)
+            if (acc == null)
             {
                 throw new ArgumentException("No account with that username exists.");
             }
-            return ComparePasswordHash(pass, acc);
+            return i;
         }
 
         /// <summary>
@@ -123,7 +182,7 @@ namespace BankingLedger_AltSource
             //Seperate salt from rest of string
             byte[] salt = new byte[16];
             Array.Copy(hashBytes, 0, salt, 0, 16);
-            var rfc = new Rfc2898DeriveBytes(passHash, salt, numberOfHashes);
+            var rfc = new Rfc2898DeriveBytes(pass, salt, numberOfHashes);
             byte[] hash = rfc.GetBytes(20);
             //Compare byte by byte
             //Start at index 16 because salt stored in 0-15
