@@ -101,7 +101,7 @@ namespace BankingLedger_AltSource
             int i = FindAccountIndex(username);            
             if(!(_accounts[i].Balance - amount >= 0))
             {
-                throw new Exception("There are not enough funds to withdraw that amount.");
+                throw new ArgumentException("There are not enough funds to withdraw that amount.");
             }
             _accounts[i].Balance -= amount;
             decimal bal = _accounts[i].Balance;
